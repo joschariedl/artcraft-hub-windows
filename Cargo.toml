@@ -3,7 +3,6 @@ resolver = "2"
 members = [
     "crates/artcraft-core",
     "crates/artcraft-hub",
-    "crates/artcraftctl",
 ]
 
 [workspace.package]

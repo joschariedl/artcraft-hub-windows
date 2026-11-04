@@ -23,8 +23,7 @@ artcraft-hub-windows/
 ├── Cargo.toml                  # workspace root
 ├── crates/
 │   ├── artcraft-core/          # shared library (no UI deps)
-│   ├── artcraft-hub/           # GUI (eframe/egui)
-│   └── artcraftctl/            # CLI
+│   └── artcraft-hub/           # GUI (eframe/egui)
 ├── assets/
 │   ├── artcraft-hub.svg        # hub icon
 │   └── icons/                  # embedded app icons (PNG, 256x256, padding-free)
@@ -71,11 +70,6 @@ Native GUI. eframe 0.37 + egui 0.37, glow backend, Windows + Linux.
 - `main.rs` – `HubApp`. Views: Apps, Settings. Panels: top, bottom, left sidebar, central.
 - Embedded icons via `include_bytes!`.
 - `--version`/`--help` handled in main().
-
-### artcraftctl (`crates/artcraftctl`)
-
-CLI. clap derive. Commands: list, status, check, install, upgrade, uninstall, doctor, config,
-pin, unpin, skip, unskip, rollback, completions.
 
 ## Security model
 

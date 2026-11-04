@@ -8,10 +8,9 @@ releases, verifies them against the release's `SHA256SUMS.txt` **and** VirusTota
 installs them per-user into `%LOCALAPPDATA%\ArtCraft`, and creates a Start Menu
 entry with a high-resolution icon.
 
-It ships two parts:
+It ships a single self-contained executable:
 
 - **`artcraft-hub`** – a native GUI (Rust + egui/eframe)
-- **`artcraftctl`** – a CLI for status, installation, updates and diagnostics
 
 All user-facing text is in English.
 
@@ -92,7 +91,7 @@ A hash conflict stops everything.
 
 - Windows 10 or 11 (x86_64)
 - A free [VirusTotal API key](https://www.virustotal.com/gui/my-apikey)
-- `artcraftctl` and `artcraft-hub.exe` on `PATH` (optional, for the CLI)
+- `artcraft-hub.exe` on `PATH` (optional)
 
 The GUI needs no runtime dependencies beyond what ships with Windows.
 
@@ -119,42 +118,6 @@ version and the latest available version.
 - **Filters & search** – filter by All/Updates/Installed/Not installed, search box, keyboard shortcuts (F5 refresh, Ctrl+F search, Ctrl+U updates, 1–4 filters, Esc close).
 During a download the GUI shows progress and the current verification stage. Errors are
 explained in plain text (missing key, hash conflict, VirusTotal finding, no release, …).
-
-### CLI
-
-```text
-artcraftctl list                 # table of all apps and versions
-artcraftctl status               # compact status (cache, ~0 s)
-artcraftctl status --refresh     # status with network query
-artcraftctl check                # look for updates
-artcraftctl install gridcraft    # install one app
-artcraftctl install gridcraft --version v0.13.0   # install and pin a specific version
-artcraftctl upgrade --all        # update all apps
-artcraftctl upgrade photocraft   # update one app
-artcraftctl uninstall deckcraft  # remove one app
-artcraftctl pin gridcraft        # pin to the current version
-artcraftctl unpin gridcraft      # allow updates again
-artcraftctl skip gridcraft       # skip the latest release
-artcraftctl unskip gridcraft     # stop skipping
-artcraftctl rollback gridcraft   # roll back to the previous version
-artcraftctl completions bash     # print shell completions
-artcraftctl doctor               # check environment and keys
-artcraftctl config --show        # show current configuration
-```
-
-Useful flags: `--json` for machine-readable output (`list`, `status`, `check`, `doctor`),
-`-y/--yes` to skip the confirmation, `--force` to reinstall the latest version,
-`--refresh` to ignore the metadata cache.
-
-Example:
-
-```console
-$ artcraftctl status
-App          Installed    Latest         Status
-photocraft   0.16.0       0.17.0         Update available
-gridcraft    0.13.0       0.13.0         up to date
-vectorcraft  –            0.18.0         not installed
-```
 
 ---
 
@@ -255,7 +218,6 @@ Layout:
 ```
 crates/artcraft-core/   catalogue, GitHub, VirusTotal, download, installation, status
 crates/artcraft-hub/    GUI (eframe/egui)
-crates/artcraftctl/     CLI
 assets/                 Hub icon and embedded app icons
 .github/workflows/      CI (Windows + Linux builds)
 ```
