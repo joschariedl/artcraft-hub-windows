@@ -291,7 +291,7 @@ pub fn scan_versions(paths: &Paths, id: &str) -> Vec<VersionEntry> {
             continue;
         }
         #[cfg(target_os = "windows")]
-        let valid = has_windows_executable(&path);
+        let valid = path.join("bin").is_dir() || has_windows_executable(&path);
         #[cfg(not(target_os = "windows"))]
         let valid = path.join("bin").is_dir();
         if !valid {
