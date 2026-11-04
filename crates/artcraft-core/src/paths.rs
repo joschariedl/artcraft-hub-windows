@@ -105,7 +105,14 @@ impl Paths {
     }
 
     pub fn desktop_file(&self, bundle: &str) -> PathBuf {
-        self.desktop_dir.join(format!("{bundle}.desktop"))
+        #[cfg(target_os = "windows")]
+        {
+            self.desktop_dir.join(format!("{bundle}.lnk"))
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            self.desktop_dir.join(format!("{bundle}.desktop"))
+        }
     }
 
     /// Where the Omarchy bar plugin lives (`~/.config/omarchy/plugins/<id>`).

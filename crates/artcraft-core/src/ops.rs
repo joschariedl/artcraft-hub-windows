@@ -977,6 +977,26 @@ pub fn open_app(app_id: &str, paths: &Paths) -> Result<()> {
     let dir = installed_dir(paths, app_id)
         .ok_or_else(|| Error::Other(format!("{} is not installed.", app.name)))?;
     // Find the main binary inside the version dir.
+    #[cfg(target_os = "windows")]
+    let bin_dir = {
+        if dir.join("bin").is_dir() {
+            dir.join("bin")
+        } else {
+            // Portable zips ship the exe at the top level (or one subdir).
+            let mut found = dir.clone();
+            if let Ok(entries) = std::fs::read_dir(&dir) {
+                for entry in entries.flatten() {
+                    let p = entry.path();
+                    if p.is_dir() && std::fs::read_dir(&p).map(|mut e| e.any(|x| x.map(|y| y.path().extension().map(|e| e == "exe").unwrap_or(false)).unwrap_or(false))).unwrap_or(false) {
+                        found = p;
+                        break;
+                    }
+                }
+            }
+            found
+        }
+    };
+    #[cfg(not(target_os = "windows"))]
     let bin_dir = dir.join("bin");
     let binary = install::find_main_binary(&bin_dir, app)
         .map(|name| bin_dir.join(name))

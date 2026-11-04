@@ -287,7 +287,14 @@ pub fn scan_versions(paths: &Paths, id: &str) -> Vec<VersionEntry> {
         let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
             continue;
         };
-        if name.starts_with('.') || !path.join("bin").is_dir() {
+        if name.starts_with('.') {
+            continue;
+        }
+        #[cfg(target_os = "windows")]
+        let valid = has_windows_executable(&path);
+        #[cfg(not(target_os = "windows"))]
+        let valid = path.join("bin").is_dir();
+        if !valid {
             continue;
         }
         found.push((ReleaseVersion::parse(name), path));
@@ -368,6 +375,28 @@ pub fn installed_record(paths: &Paths, plan: &ReleasePlan, dir: &Path) -> Instal
         dir: dir.to_path_buf(),
         desktop_file: paths.desktop_file(&format!("ai.storyteller.{}", plan.app_id)),
     }
+}
+
+
+#[cfg(target_os = "windows")]
+fn has_windows_executable(dir: &std::path::Path) -> bool {
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_file() {
+                if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                    if name.to_ascii_lowercase().ends_with(".exe") {
+                        return true;
+                    }
+                }
+            } else if path.is_dir() {
+                if has_windows_executable(&path) {
+                    return true;
+                }
+            }
+        }
+    }
+    false
 }
 
 #[cfg(test)]

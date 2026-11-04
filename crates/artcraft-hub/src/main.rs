@@ -1,3 +1,4 @@
+#![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 //! ArtCraft Hub – a native installer/updater for the Craft Apps.
 //!
 //! No web view, no Electron: egui/eframe render the whole UI. Every install is

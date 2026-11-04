@@ -183,15 +183,31 @@ fn activate_version(
     paths: &Paths,
     progress: ProgressFn<'_>,
 ) -> Result<InstalledApp> {
-    let bin_dir = version_dir.join("bin");
-    if !bin_dir.is_dir() {
-        return Err(Error::Install(format!(
-            "{} {} has no bin/ directory",
-            app.name, version
-        )));
+    let bin_dir = if version_dir.join("bin").is_dir() {
+        version_dir.join("bin")
+    } else {
+        // Portable zips ship the exe at the top level (or one subdir).
+        let mut found = version_dir.to_path_buf();
+        if let Ok(entries) = fs::read_dir(version_dir) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.is_dir() {
+                    if let Ok(mut rd) = fs::read_dir(&p) {
+                        if rd.any(|e| e.map(|x| x.path().extension().map(|e| e == "exe").unwrap_or(false)).unwrap_or(false)) {
+                            found = p;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        found
+    };
+    if !bin_dir.is_dir() && !bin_dir.join(&format!("{}.exe", app.id)).exists() {
+        // allow top-level exe without bin dir
     }
     let main_binary = find_main_binary(&bin_dir, app).ok_or_else(|| {
-        Error::Install(format!("no executable for {} found in bin/", app.name))
+        Error::Install(format!("no executable for {} found", app.name))
     })?;
     let binary = bin_dir.join(&main_binary);
 
