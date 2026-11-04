@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b2231"/>
+      <stop offset="1" stop-color="#0d1118"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#40d0b4"/>
+      <stop offset="1" stop-color="#2f7bf5"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)" stroke="url(#rim)" stroke-width="12"/>
+
+  <!-- Palette -->
+  <path d="M256 96c-88 0-160 67-160 150 0 83 72 122 122 98 22-11 18-34 6-47-12-13-10-31 8-38 15-6 32 1 42 13 22 27 60 34 88 14 20-15 24-41 24-70 0-66-58-120-130-120z"
+        fill="#f2f5fb" opacity="0.96"/>
+  <circle cx="196" cy="196" r="26" fill="#2f7bf5"/>
+  <circle cx="268" cy="166" r="26" fill="#e8204f"/>
+  <circle cx="330" cy="210" r="26" fill="#e0a316"/>
+  <circle cx="172" cy="272" r="26" fill="#8b5cf6"/>
+  <circle cx="332" cy="284" r="24" fill="#40d0b4"/>
+
+  <!-- Brush, crossing the palette's right edge -->
+  <g transform="rotate(38 366 346)">
+    <rect x="350" y="256" width="34" height="128" rx="12" fill="#f2f5fb"/>
+    <rect x="345" y="376" width="44" height="26" rx="8" fill="#c8d2e4"/>
+    <path d="M345 402h44l-14 46c-4 12-12 12-16 0z" fill="#40d0b4"/>
+  </g>
+</svg>
