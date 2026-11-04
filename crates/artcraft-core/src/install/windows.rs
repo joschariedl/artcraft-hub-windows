@@ -150,15 +150,41 @@ fn find_bin_dir(root: &Path) -> Option<PathBuf> {
     if root.join("bin").is_dir() {
         return Some(root.join("bin"));
     }
+    // Portable zips ship the binaries at the top level (or one subdir) with
+    // no `bin/` directory.
+    if dir_has_executable(root) {
+        return Some(root.to_path_buf());
+    }
     if let Ok(entries) = fs::read_dir(root) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_dir() && path.join("bin").is_dir() {
-                return Some(path.join("bin"));
+            if path.is_dir() {
+                if path.join("bin").is_dir() {
+                    return Some(path.join("bin"));
+                }
+                if dir_has_executable(&path) {
+                    return Some(path);
+                }
             }
         }
     }
     None
+}
+
+fn dir_has_executable(dir: &Path) -> bool {
+    fs::read_dir(dir)
+        .map(|mut rd| {
+            rd.any(|e| {
+                e.map(|x| {
+                    x.path()
+                        .extension()
+                        .map(|ext| ext.eq_ignore_ascii_case("exe"))
+                        .unwrap_or(false)
+                })
+                .unwrap_or(false)
+            })
+        })
+        .unwrap_or(false)
 }
 
 fn extract_archive(archive: &Path, dest: &Path) -> Result<()> {
@@ -167,9 +193,7 @@ fn extract_archive(archive: &Path, dest: &Path) -> Result<()> {
         ps_quote(&archive.display().to_string()),
         ps_quote(&dest.display().to_string())
     );
-    let status = Command::new("powershell")
-        .args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", &script])
-        .status()?;
+    let status = run_powershell(&script)?;
     if !status.success() {
         return Err(Error::Install("Failed to extract archive with PowerShell".into()));
     }
@@ -183,26 +207,7 @@ fn activate_version(
     paths: &Paths,
     progress: ProgressFn<'_>,
 ) -> Result<InstalledApp> {
-    let bin_dir = if version_dir.join("bin").is_dir() {
-        version_dir.join("bin")
-    } else {
-        // Portable zips ship the exe at the top level (or one subdir).
-        let mut found = version_dir.to_path_buf();
-        if let Ok(entries) = fs::read_dir(version_dir) {
-            for entry in entries.flatten() {
-                let p = entry.path();
-                if p.is_dir() {
-                    if let Ok(mut rd) = fs::read_dir(&p) {
-                        if rd.any(|e| e.map(|x| x.path().extension().map(|e| e == "exe").unwrap_or(false)).unwrap_or(false)) {
-                            found = p;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        found
-    };
+    let bin_dir = find_bin_dir(version_dir).unwrap_or_else(|| version_dir.to_path_buf());
     if !bin_dir.is_dir() && !bin_dir.join(&format!("{}.exe", app.id)).exists() {
         // allow top-level exe without bin dir
     }
@@ -235,9 +240,7 @@ fn create_shortcut(shortcut: &Path, target: &Path, working_dir: &Path) -> Result
         ps_quote(&target.display().to_string()),
         ps_quote(&working_dir.display().to_string())
     );
-    let status = Command::new("powershell")
-        .args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", &script])
-        .status()?;
+    let status = run_powershell(&script)?;
     if !status.success() {
         return Err(Error::Install("Failed to create Start Menu shortcut".into()));
     }
@@ -270,6 +273,18 @@ fn prune_old_versions(app: &AppDef, paths: &Paths, keep_dir: &Path) {
             let _ = fs::remove_dir_all(&path);
         }
     }
+}
+
+fn run_powershell(script: &str) -> Result<std::process::ExitStatus> {
+    let mut cmd = Command::new("powershell");
+    cmd.args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script]);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    Ok(cmd.status()?)
 }
 
 fn ps_quote(s: &str) -> String {
