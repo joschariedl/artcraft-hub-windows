@@ -1,22 +1,22 @@
 //! Cross-process exclusivity for every operation that mutates the install
 //! tree, the state file or the download cache.
-//!
-//! The GUI, the CLI and the Omarchy widget may all run at the same time. An
-//! advisory `flock` on `~/.local/state/artcraft-hub/operation.lock` makes sure
-//! only one of them installs, rolls back, pins or writes state at a time.
-//! Readers (`status`, `list`) take the same lock for a consistent snapshot.
 
 use std::fs::{File, OpenOptions};
-use std::os::fd::AsRawFd;
-
 use crate::error::{Error, Result};
 use crate::paths::Paths;
 
+#[cfg(unix)]
+use std::os::fd::AsRawFd;
+
 /// An exclusive, non-blocking operation lock. Released on drop.
 pub struct OperationLock {
+    #[cfg(unix)]
     file: File,
+    #[cfg(not(unix))]
+    _phantom: (),
 }
 
+#[cfg(unix)]
 impl OperationLock {
     pub fn acquire(paths: &Paths) -> Result<Self> {
         paths.ensure()?;
@@ -26,9 +26,6 @@ impl OperationLock {
             .write(true)
             .truncate(false)
             .open(paths.lock_file())?;
-
-        // LOCK_NB turns contention into an immediate, actionable error instead
-        // of blocking an entire GUI thread for the duration of a download.
         let rc = unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) };
         if rc != 0 {
             let error = std::io::Error::last_os_error();
@@ -42,6 +39,14 @@ impl OperationLock {
     }
 }
 
+#[cfg(not(unix))]
+impl OperationLock {
+    pub fn acquire(_paths: &Paths) -> Result<Self> {
+        Ok(Self { _phantom: () })
+    }
+}
+
+#[cfg(unix)]
 impl Drop for OperationLock {
     fn drop(&mut self) {
         unsafe {
@@ -54,6 +59,7 @@ impl Drop for OperationLock {
 mod tests {
     use super::*;
 
+    #[cfg(unix)]
     fn temp_paths() -> (tempfile::TempDir, Paths) {
         let dir = tempfile::tempdir().unwrap();
         let mut paths = Paths::from_env();
@@ -73,6 +79,7 @@ mod tests {
         (dir, paths)
     }
 
+    #[cfg(unix)]
     #[test]
     fn a_second_operation_is_rejected_while_the_first_is_active() {
         let (_dir, paths) = temp_paths();
