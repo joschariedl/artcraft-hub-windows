@@ -20,11 +20,13 @@ jobs:
         run: cargo build --workspace --release
       - name: Test
         run: cargo test --workspace
-      - name: Upload hub
+      - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
           name: artcraft-hub-windows
-          path: target/release/artcraft-hub.exe
+          path: |
+            target/release/artcraft-hub.exe
+            target/release/artcraftctl.exe
 
   linux:
     runs-on: ubuntu-latest
