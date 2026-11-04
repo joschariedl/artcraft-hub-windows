@@ -217,7 +217,7 @@ fn activate_version(
     let binary = bin_dir.join(&main_binary);
 
     progress::message(progress, "Creating Start Menu shortcut …");
-    let shortcut = paths.applications_dir.join(format!("{}.lnk", app.bundle_id()));
+    let shortcut = paths.applications_dir.join(format!("{}.lnk", app.name));
     if let Some(parent) = shortcut.parent() {
         fs::create_dir_all(parent)?;
     }
@@ -254,7 +254,7 @@ pub fn uninstall(app: &AppDef, paths: &Paths) -> Result<bool> {
         let _ = fs::remove_dir_all(&app_dir);
         removed = true;
     }
-    let shortcut = paths.applications_dir.join(format!("{}.lnk", app.bundle_id()));
+    let shortcut = paths.applications_dir.join(format!("{}.lnk", app.name));
     if shortcut.exists() {
         let _ = fs::remove_file(&shortcut);
         removed = true;

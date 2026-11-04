@@ -25,11 +25,12 @@ impl Paths {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
         let config = dirs::config_dir().unwrap_or_else(|| home.join(".config"));
         let data = dirs::data_dir().unwrap_or_else(|| home.join(".local/share"));
+        let local_data = dirs::data_local_dir().unwrap_or_else(|| data.clone());
         let cache = dirs::cache_dir().unwrap_or_else(|| home.join(".cache"));
-        let state = dirs::state_dir().unwrap_or_else(|| data.join("artcraft-hub/state"));
+        let state = dirs::state_dir().unwrap_or_else(|| local_data.join("artcraft-hub/state"));
         #[cfg(target_os = "windows")]
         let (install_root, bin_dir, applications_dir) = {
-            let root = data.join("ArtCraft");
+            let root = local_data.join("ArtCraft");
             (root.clone(), root.join("bin"), data.join("Microsoft").join("Windows").join("Start Menu").join("Programs").join("ArtCraft"))
         };
         #[cfg(not(target_os = "windows"))]
