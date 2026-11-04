@@ -16,6 +16,8 @@ All user-facing text is in English.
 
 ---
 
+![ArtCraft Hub](assets/screenshot.png)
+
 ## Download
 
 Pre-built binaries are published on the
