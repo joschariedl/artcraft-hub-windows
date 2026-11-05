@@ -245,9 +245,18 @@ fn verify_gpg_file(
         .output()
         .map_err(|e| Error::SignatureFailed(e.to_string()))?;
     if !output.status.success() {
-        return Err(Error::SignatureFailed(shorten(&String::from_utf8_lossy(
-            &output.stderr,
-        ))));
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if !cfg.require_gpg_signature && stderr.contains("No public key") {
+            progress::message(
+                progress,
+                "GPG signature published but the signing key is not in your keyring; \
+                 continuing (warning only). Import key 568DC1F68F8FAECC797F3C7B006DAF6BB0EF334E \
+                 to verify."
+                    .to_string(),
+            );
+            return Ok(TrustState::Unavailable);
+        }
+        return Err(Error::SignatureFailed(shorten(&stderr)));
     }
 
     if !cfg.gpg_trusted_fingerprints.is_empty() {
