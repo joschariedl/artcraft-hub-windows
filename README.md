@@ -18,11 +18,16 @@ All user-facing text is in English.
 
 ![ArtCraft Hub](assets/screenshot.png)
 
+## Download
+
+Pre-built Windows binaries are published on the
+[releases page](https://github.com/joschariedl/artcraft-hub-windows/releases)
+as `artcraft-hub-windows-vX.Y.Z.zip`. Extract `artcraft-hub.exe` and run it directly –
+no installation required.
+
 ## Build from source
 
-Source archives are published on the
-[releases page](https://github.com/joschariedl/artcraft-hub-windows/releases).
-The build requires Rust 1.85+.
+Source archives are also published on the releases page. The build requires Rust 1.85+.
 
 ```text
 git clone https://github.com/joschariedl/artcraft-hub-windows.git
