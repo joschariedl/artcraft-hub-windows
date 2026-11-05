@@ -119,3 +119,5 @@ CI (`.github/workflows/build.yml`) builds on `windows-latest` and `ubuntu-latest
   PowerShell-based install backend, CI workflow.
 - Embedded icons for 15 apps.
 - Windows standalone `.exe` published as v0.1.0.
+- Releases are source-only (GitHub's auto-generated source archives); build with
+  `cargo build --workspace --release`.
