@@ -1361,199 +1361,99 @@ impl HubApp {
         ui.heading("Settings");
         ui.label(
             RichText::new(
-                "Configuration is stored in ~/.config/artcraft-hub/config.toml with mode 0600.",
+                "Configuration is stored in the user config directory.",
             )
             .small()
             .color(muted()),
         );
-        ui.add_space(12.0);
+        ui.add_space(8.0);
 
-        egui::Frame::new()
-            .fill(card())
-            .corner_radius(CornerRadius::same(10))
-            .inner_margin(Margin::symmetric(14, 12))
-            .stroke(Stroke::new(1.0, border()))
+        egui::ScrollArea::vertical()
+            .auto_shrink([false, false])
             .show(ui, |ui| {
-                ui.label(RichText::new("VirusTotal").strong().color(text()));
-                ui.label(
-                    RichText::new(
-                        "Public API: 4 requests per minute, 500 per day. The key is only used for checks; files are never uploaded.",
-                    )
-                    .small()
-                    .color(muted()),
-                );
-                ui.add_space(6.0);
+                ui.columns(2, |cols| {
+                    cols[0].vertical(|ui| {
+                        egui::Frame::new()
+                            .fill(card())
+                            .corner_radius(CornerRadius::same(10))
+                            .inner_margin(Margin::symmetric(12, 10))
+                            .stroke(Stroke::new(1.0, border()))
+                            .show(ui, |ui| {
+                                ui.label(RichText::new("VirusTotal").strong().color(text()));
+                                ui.label(RichText::new("Public API: 4 requests per minute, 500 per day.").small().color(muted()));
+                                ui.add_space(4.0);
+                                ui.horizontal(|ui| {
+                                    ui.add(egui::TextEdit::singleline(&mut self.settings.vt_key).password(true).hint_text("VirusTotal API key").desired_width(260.0));
+                                    if ui.button("Create key").clicked() { open_url("https://www.virustotal.com/gui/my-apikey"); }
+                                });
+                            });
+                        ui.add_space(8.0);
+                        egui::Frame::new()
+                            .fill(card())
+                            .corner_radius(CornerRadius::same(10))
+                            .inner_margin(Margin::symmetric(12, 10))
+                            .stroke(Stroke::new(1.0, border()))
+                            .show(ui, |ui| {
+                                ui.label(RichText::new("GitHub").strong().color(text()));
+                                ui.label(RichText::new("Optional. Raises the API limit from 60 to 5,000 req/h.").small().color(muted()));
+                                ui.add_space(4.0);
+                                ui.add(egui::TextEdit::singleline(&mut self.settings.github_token).password(true).hint_text("GitHub token (optional)").desired_width(300.0));
+                            });
+                    });
+                    cols[1].vertical(|ui| {
+                        egui::Frame::new()
+                            .fill(card())
+                            .corner_radius(CornerRadius::same(10))
+                            .inner_margin(Margin::symmetric(12, 10))
+                            .stroke(Stroke::new(1.0, border()))
+                            .show(ui, |ui| {
+                                ui.label(RichText::new("Behaviour").strong().color(text()));
+                                ui.checkbox(&mut self.settings.require_sums, "Require SHA256SUMS.txt");
+                                ui.checkbox(&mut self.settings.install_1024, "Install 1024 px icon");
+                                ui.checkbox(&mut self.settings.follow_omarchy_theme, "Follow theme");
+                                ui.horizontal(|ui| { ui.label("Check interval:"); ui.add(egui::DragValue::new(&mut self.settings.check_interval).range(5..=1440).suffix(" min")); });
+                                ui.horizontal(|ui| { ui.label("Versions kept:"); ui.add(egui::DragValue::new(&mut self.settings.keep_versions).range(1..=10)); });
+                                ui.horizontal(|ui| { ui.label("Parallel checks:"); ui.add(egui::DragValue::new(&mut self.settings.parallel_checks).range(1..=8)); });
+                                ui.horizontal(|ui| { ui.label("Network attempts:"); ui.add(egui::DragValue::new(&mut self.settings.network_retries).range(1..=6)); });
+                            });
+                        ui.add_space(8.0);
+                        egui::Frame::new()
+                            .fill(Color32::from_rgb(46, 35, 20))
+                            .corner_radius(CornerRadius::same(10))
+                            .inner_margin(Margin::symmetric(12, 10))
+                            .stroke(Stroke::new(1.0, warn().linear_multiply(0.5)))
+                            .show(ui, |ui| {
+                                ui.label(RichText::new("Advanced").strong().color(warn()));
+                                ui.checkbox(&mut self.settings.allow_unknown, "Allow unclear VirusTotal results");
+                                ui.label(RichText::new("Not recommended.").small().color(muted()));
+                                ui.add_space(4.0);
+                                ui.label(RichText::new("Trust anchors").strong().color(text()));
+                                ui.checkbox(&mut self.settings.require_attestations, "Require attestations");
+                                ui.checkbox(&mut self.settings.require_signed_manifest, "Require signed manifest");
+                                ui.checkbox(&mut self.settings.require_gpg_signature, "Require GPG signature");
+                                ui.add(egui::TextEdit::singleline(&mut self.settings.gpg_keyring).hint_text("GPG keyring path (empty = default)").desired_width(260.0));
+                                ui.add(egui::TextEdit::singleline(&mut self.settings.gpg_trusted_fingerprints).hint_text("Trusted GPG fingerprints").desired_width(260.0));
+                            });
+                    });
+                });
+
+                ui.add_space(10.0);
                 ui.horizontal(|ui| {
-                    ui.add(
-                        egui::TextEdit::singleline(&mut self.settings.vt_key)
-                            .password(true)
-                            .hint_text("VirusTotal API key")
-                            .desired_width(420.0),
-                    );
-                    if ui.button("Create key").clicked() {
-                        open_url("https://www.virustotal.com/gui/my-apikey");
+                    if ui.add(egui::Button::new(RichText::new("Save").strong().color(Color32::BLACK)).fill(accent()).corner_radius(CornerRadius::same(8)).min_size(Vec2::new(130.0, 34.0))).clicked() {
+                        self.settings.apply(&mut self.cfg);
+                        match self.cfg.save(&self.paths) {
+                            Ok(()) => { self.toast("Settings saved.", true); self.spawn_check(ui.ctx(), false); }
+                            Err(error) => self.toast(format!("Saving failed: {error}"), false),
+                        }
+                    }
+                    if ui.button("Open config folder").clicked() {
+                        open_url(&format!("file://{}", self.paths.config_dir.display()));
+                    }
+                    if ui.button("Reset").clicked() {
+                        self.settings = SettingsDraft::from_config(&self.cfg);
                     }
                 });
-                if self.cfg.virustotal_api_key.trim().is_empty()
-                    && self.cfg.vt_key().is_some()
-                {
-                    ui.label(
-                        RichText::new(
-                            "Currently VIRUSTOTAL_API_KEY from the environment is used.",
-                        )
-                        .small()
-                        .color(muted()),
-                    );
-                }
             });
-        ui.add_space(10.0);
-
-        egui::Frame::new()
-            .fill(card())
-            .corner_radius(CornerRadius::same(10))
-            .inner_margin(Margin::symmetric(14, 12))
-            .stroke(Stroke::new(1.0, border()))
-            .show(ui, |ui| {
-                ui.label(RichText::new("GitHub").strong().color(text()));
-                ui.label(
-                    RichText::new(
-                        "Optional. A token raises the API limit from 60 to 5,000 requests per hour; without one the release feed is used as fallback.",
-                    )
-                    .small()
-                    .color(muted()),
-                );
-                ui.add_space(6.0);
-                ui.add(
-                    egui::TextEdit::singleline(&mut self.settings.github_token)
-                        .password(true)
-                        .hint_text("GitHub token (optional)")
-                        .desired_width(420.0),
-                );
-            });
-        ui.add_space(10.0);
-
-        egui::Frame::new()
-            .fill(card())
-            .corner_radius(CornerRadius::same(10))
-            .inner_margin(Margin::symmetric(14, 12))
-            .stroke(Stroke::new(1.0, border()))
-            .show(ui, |ui| {
-                ui.label(RichText::new("Behaviour").strong().color(text()));
-                ui.checkbox(
-                    &mut self.settings.require_sums,
-                    "Require SHA256SUMS.txt",
-                );
-                ui.checkbox(
-                    &mut self.settings.install_1024,
-                    "Install 1024 px icon from the repository",
-                );
-                ui.checkbox(
-                    &mut self.settings.follow_omarchy_theme,
-                    "Follow the active Omarchy theme",
-                );
-                ui.horizontal(|ui| {
-                    ui.label("Check interval:");
-                    ui.add(
-                        egui::DragValue::new(&mut self.settings.check_interval)
-                            .range(5..=1440)
-                            .suffix(" min"),
-                    );
-                });
-                ui.horizontal(|ui| {
-                    ui.label("Versions kept:");
-                    ui.add(
-                        egui::DragValue::new(&mut self.settings.keep_versions)
-                            .range(1..=10),
-                    );
-                });
-                ui.horizontal(|ui| {
-                    ui.label("Parallel checks:");
-                    ui.add(
-                        egui::DragValue::new(&mut self.settings.parallel_checks)
-                            .range(1..=8),
-                    );
-                });
-                ui.horizontal(|ui| {
-                    ui.label("Network attempts:");
-                    ui.add(
-                        egui::DragValue::new(&mut self.settings.network_retries)
-                            .range(1..=6),
-                    );
-                });
-            });
-        ui.add_space(10.0);
-
-        egui::Frame::new()
-            .fill(Color32::from_rgb(46, 35, 20))
-            .corner_radius(CornerRadius::same(10))
-            .inner_margin(Margin::symmetric(14, 12))
-            .stroke(Stroke::new(1.0, warn().linear_multiply(0.5)))
-            .show(ui, |ui| {
-                ui.label(RichText::new("Advanced").strong().color(warn()));
-                ui.checkbox(
-                    &mut self.settings.allow_unknown,
-                    "Allow unclear VirusTotal results",
-                );
-                ui.label(
-                    RichText::new(
-                        "Not recommended: if VirusTotal cannot confirm the content, the app is installed anyway.",
-                    )
-                    .small()
-                    .color(muted()),
-                );
-                ui.add_space(6.0);
-                ui.label(RichText::new("Trust anchors").strong().color(text()));
-                ui.checkbox(
-                    &mut self.settings.require_attestations,
-                    "Require GitHub provenance attestations",
-                );
-                ui.checkbox(
-                    &mut self.settings.require_signed_manifest,
-                    "Require a signed SHA256SUMS.txt manifest",
-                );
-                ui.checkbox(
-                    &mut self.settings.require_gpg_signature,
-                    "Require a GPG signature for the archive",
-                );
-                ui.add(
-                    egui::TextEdit::singleline(&mut self.settings.gpg_keyring)
-                        .hint_text("GPG keyring path (empty = default)")
-                        .desired_width(420.0),
-                );
-                ui.add(
-                    egui::TextEdit::singleline(&mut self.settings.gpg_trusted_fingerprints)
-                        .hint_text("Trusted GPG fingerprints (comma separated)")
-                        .desired_width(420.0),
-                );
-            });
-
-        ui.add_space(14.0);
-        ui.horizontal(|ui| {
-            if ui
-                .add(
-                    egui::Button::new(RichText::new("Save").strong().color(Color32::BLACK))
-                        .fill(accent())
-                        .corner_radius(CornerRadius::same(8))
-                        .min_size(Vec2::new(130.0, 34.0)),
-                )
-                .clicked()
-            {
-                self.settings.apply(&mut self.cfg);
-                match self.cfg.save(&self.paths) {
-                    Ok(()) => {
-                        self.toast("Settings saved.", true);
-                        self.spawn_check(ui.ctx(), false);
-                    }
-                    Err(error) => self.toast(format!("Saving failed: {error}"), false),
-                }
-            }
-            if ui.button("Open config folder").clicked() {
-                open_url(&format!("file://{}", self.paths.config_dir.display()));
-            }
-            if ui.button("Reset").clicked() {
-                self.settings = SettingsDraft::from_config(&self.cfg);
-            }
-        });
     }
 
     fn update_window(&mut self, ctx: &egui::Context) {
@@ -1983,12 +1883,34 @@ fn truncate(text: &str, max: usize) -> String {
 }
 
 fn open_url(url: &str) {
-    if url.starts_with("https://") || url.starts_with("file://") {
-        let _ = std::process::Command::new("xdg-open")
-            .arg(url)
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .spawn();
+    #[cfg(target_os = "windows")]
+    {
+        if url.starts_with("https://") {
+            let _ = std::process::Command::new("cmd")
+                .args(["/C", "start", "", url])
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn();
+            return;
+        }
+        if let Some(path) = url.strip_prefix("file://") {
+            let _ = std::process::Command::new("explorer")
+                .arg(path)
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn();
+            return;
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        if url.starts_with("https://") || url.starts_with("file://") {
+            let _ = std::process::Command::new("xdg-open")
+                .arg(url)
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn();
+        }
     }
 }
 
