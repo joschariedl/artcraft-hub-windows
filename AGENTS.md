@@ -5,7 +5,7 @@ the architecture, data flow, key decisions, file layout and conventions so chang
 
 ## Project overview
 
-ArtCraft Hub (Windows) is a native installer/updater for the 15 Craft Apps supported by
+ArtCraft Hub (Windows) is a native installer/updater for the 16 Craft Apps supported by
 ArtCraft Hub (https://getartcraft.com/apps) on Windows 10/11 (x86_64). It downloads the official
 Windows portable-zip releases from GitHub, verifies them (SHA-256 + VirusTotal + optional
 GPG), installs them per-user into `%LOCALAPPDATA%\ArtCraft`, creates Start Menu shortcuts, and
@@ -119,5 +119,6 @@ CI (`.github/workflows/build.yml`) builds on `windows-latest` and `ubuntu-latest
   PowerShell-based install backend, CI workflow.
 - Embedded icons for 15 apps.
 - Windows standalone `.exe` published as v0.1.0.
+- Added AniCraft (2D vector animation) to the supported app suite (16 apps total).
 - Releases are source-only (GitHub's auto-generated source archives); build with
   `cargo build --workspace --release`.

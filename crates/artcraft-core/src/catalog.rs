@@ -65,8 +65,8 @@ const fn app(
     }
 }
 
-/// All 15 apps from getartcraft.com/apps that ArtCraft Hub supports, in website order.
-pub const SUITE: [AppDef; 15] = [
+/// All 16 apps from getartcraft.com/apps that ArtCraft Hub supports, in website order.
+pub const SUITE: [AppDef; 16] = [
     app("photocraft", "PhotoCraft", "Image editing", [0x2f, 0x7b, 0xf5], "storytold/photocraft"),
     app("vectorcraft", "VectorCraft", "Vector illustration", [0xe8, 0x57, 0x3f], "storytold/vectorcraft"),
     app("filmcraft", "FilmCraft", "Video editing, colour and sound", [0x8b, 0x5c, 0xf6], "storytold/filmcraft"),
@@ -76,6 +76,7 @@ pub const SUITE: [AppDef; 15] = [
         ..app("pdfcraft", "PdfCraft", "Read, organise and protect PDFs", [0xe8, 0x20, 0x4f], "storytold/pdfcraft")
     },
     app("effectcraft", "EffectCraft", "Motion graphics and VFX", [0xe0, 0x36, 0x8f], "storytold/effectcraft"),
+    app("anicraft", "AniCraft", "2D vector animation", [0xda, 0xc6, 0x04], "storytold/anicraft"),
     app("designcraft", "DesignCraft", "Page layout and publishing", [0x7b, 0xb5, 0x1c], "storytold/designcraft"),
     app("figcraft", "FigCraft", "Interface design and prototyping", [0x02, 0xda, 0x96], "storytold/figcraft"),
     app("texturecraft", "TextureCraft", "3D texture painting", [0xc2, 0x67, 0x2b], "storytold/texturecraft"),

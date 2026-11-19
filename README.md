@@ -49,6 +49,7 @@ The resulting `artcraft-hub.exe` runs directly – no installation required.
 | LightCraft | Photo library and RAW development | `storytold/lightcraft` |
 | PdfCraft | Read, organise and protect PDFs | `storytold/pdfcraft` |
 | EffectCraft | Motion graphics and VFX | `storytold/effectcraft` |
+| AniCraft | 2D vector animation | `storytold/anicraft` |
 | DesignCraft | Page layout and publishing | `storytold/designcraft` |
 | FigCraft | Interface design and prototyping | `storytold/figcraft` |
 | TextureCraft | 3D texture painting | `storytold/texturecraft` |
@@ -59,7 +60,7 @@ The resulting `artcraft-hub.exe` runs directly – no installation required.
 | CADCraft | CAD and technical drawing | `storytold/cadcraft` |
 | GridCraft | Spreadsheets and data analysis | `storytold/gridcraft` |
 
-All 15 supported apps have public releases. An app shows as "no release" only when GitHub's API limit
+All 16 supported apps have public releases. An app shows as "no release" only when GitHub's API limit
 (60 requests/hour without a token) is reached – the release feed does not include every app,
 so there is no fallback in that case. A GitHub token (settings) fixes it.
 
@@ -120,7 +121,7 @@ The GUI needs no runtime dependencies beyond what ships with Windows.
 artcraft-hub.exe
 ```
 
-Or double-click it. The UI shows all 15 supported apps with icon, installed
+Or double-click it. The UI shows all 16 supported apps with icon, installed
 version and the latest available version.
 
 - **Install** – downloads, verifies (SHA-256 + VirusTotal) and installs the current version.

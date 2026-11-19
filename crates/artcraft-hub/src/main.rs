@@ -1936,6 +1936,7 @@ fn embedded_icon(id: &str) -> Option<&'static [u8]> {
         "lightcraft" => Some(include_bytes!("../../../assets/icons/lightcraft.png")),
         "pdfcraft" => Some(include_bytes!("../../../assets/icons/pdfcraft.png")),
         "effectcraft" => Some(include_bytes!("../../../assets/icons/effectcraft.png")),
+        "anicraft" => Some(include_bytes!("../../../assets/icons/anicraft.png")),
         "designcraft" => Some(include_bytes!("../../../assets/icons/designcraft.png")),
         "figcraft" => Some(include_bytes!("../../../assets/icons/figcraft.png")),
         "texturecraft" => Some(include_bytes!("../../../assets/icons/texturecraft.png")),
