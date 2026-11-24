@@ -117,7 +117,7 @@ CI (`.github/workflows/build.yml`) builds on `windows-latest` and `ubuntu-latest
 
 Version history: v0.1.0 first build · v0.1.1 GUI subsystem + icon · v0.1.2 install fixes ·
 v0.1.3 LocalAppData + shortcut name · v0.1.4 GPG key handling · v0.1.5 compact settings ·
-v0.1.6 AniCraft · v0.1.7 stable file associations.
+v0.1.6 AniCraft · v0.1.7 stable file associations · v0.1.8 recognize RC releases.
 
 - Initial Windows port from artcraft-hub: platform guards, Windows paths, asset selection,
   PowerShell-based install backend, CI workflow.

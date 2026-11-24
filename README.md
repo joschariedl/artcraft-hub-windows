@@ -248,6 +248,7 @@ The Windows install backend lives in `crates/artcraft-core/src/install/windows.r
 
 ## Version history
 
+- **v0.1.8** – Recognize pre-release (RC) versions as latest.
 - **v0.1.7** – Stable per-app junctions so file associations survive upgrades.
 - **v0.1.6** – Add AniCraft (2D vector animation); 16 supported apps.
 - **v0.1.5** – Compact, scrollable settings view; open config folder works on Windows.
