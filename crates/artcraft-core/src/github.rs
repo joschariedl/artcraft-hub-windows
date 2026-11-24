@@ -542,7 +542,7 @@ fn fetch_github_meta(
     last_modified: Option<&str>,
     attempts: u32,
 ) -> Result<GithubMeta> {
-    let url = format!("{GITHUB_API}/repos/{}/releases/latest", app.repo);
+    let url = format!("{GITHUB_API}/repos/{}/releases?per_page=100", app.repo);
     let token = cfg.github_token().unwrap_or_default();
     let mut headers: Vec<(&str, &str)> = vec![
         ("Accept", "application/vnd.github+json"),
@@ -560,11 +560,14 @@ fn fetch_github_meta(
     let reply = net::get_retry(agent, &url, &headers, MAX_JSON, attempts)?;
     match reply.status {
         304 => Ok(GithubMeta::NotModified),
-        200 => Ok(GithubMeta::Release {
-            release: Box::new(parse_github_release(&reply.body_text(), app.repo)?),
-            etag: reply.etag,
-            last_modified: reply.last_modified,
-        }),
+        200 => {
+            let release = parse_github_releases(&reply.body_text(), app.repo)?;
+            Ok(GithubMeta::Release {
+                release: Box::new(release),
+                etag: reply.etag,
+                last_modified: reply.last_modified,
+            })
+        }
         403 | 429 => Err(Error::RateLimited),
         404 => Err(Error::NoRelease(app.name.to_string())),
         status => Err(Error::Http(format!(
@@ -578,6 +581,35 @@ fn fetch_github_meta(
 pub fn parse_github_release(json: &str, repo: &str) -> Result<Release> {
     let value: Value = serde_json::from_str(json)?;
     release_from_value(&value, repo)
+}
+
+/// Parses `GET /repos/<repo>/releases` (a JSON array) and returns the highest
+/// version, including pre-releases (release candidates).
+pub fn parse_github_releases(json: &str, repo: &str) -> Result<Release> {
+    let value: Value = serde_json::from_str(json)?;
+    let list = value
+        .as_array()
+        .ok_or_else(|| Error::Other("expected a release list".into()))?;
+    let mut best: Option<Release> = None;
+    for entry in list {
+        if entry.get("draft").and_then(Value::as_bool).unwrap_or(false) {
+            continue;
+        }
+        let Ok(release) = release_from_value(entry, repo) else {
+            continue;
+        };
+        match &best {
+            None => best = Some(release),
+            Some(current) => {
+                if ReleaseVersion::parse(&release.tag).cmp_version(&ReleaseVersion::parse(&current.tag))
+                    == std::cmp::Ordering::Greater
+                {
+                    best = Some(release);
+                }
+            }
+        }
+    }
+    best.ok_or_else(|| Error::NoRelease(repo.to_string()))
 }
 
 fn release_from_value(value: &Value, repo: &str) -> Result<Release> {
