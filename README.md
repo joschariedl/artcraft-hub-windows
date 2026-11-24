@@ -245,6 +245,18 @@ The Windows install backend lives in `crates/artcraft-core/src/install/windows.r
 
 ---
 
+
+## Version history
+
+- **v0.1.7** – Stable per-app junctions so file associations survive upgrades.
+- **v0.1.6** – Add AniCraft (2D vector animation); 16 supported apps.
+- **v0.1.5** – Compact, scrollable settings view; open config folder works on Windows.
+- **v0.1.4** – GPG verification warns instead of failing when the signing key is missing.
+- **v0.1.3** – Installs go to `%LOCALAPPDATA%\ArtCraft`; Start Menu shortcut named after the app.
+- **v0.1.2** – Portable-zip layout handling; hidden PowerShell; no console popup.
+- **v0.1.1** – GUI subsystem (no console window); embedded icon.
+- **v0.1.0** – First Windows build.
+
 ## License
 
 MIT – see `LICENSE`. Copyright (c) 2026 Joscha Riedl.
