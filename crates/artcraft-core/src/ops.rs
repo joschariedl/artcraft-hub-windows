@@ -979,10 +979,12 @@ pub fn open_app(app_id: &str, paths: &Paths) -> Result<()> {
     // Find the main binary inside the version dir.
     #[cfg(target_os = "windows")]
     let bin_dir = {
-        if dir.join("bin").is_dir() {
+        let stable = paths.bin_dir.join(app.id);
+        if stable.is_dir() {
+            stable
+        } else if dir.join("bin").is_dir() {
             dir.join("bin")
         } else {
-            // Portable zips ship the exe at the top level (or one subdir).
             let mut found = dir.clone();
             if let Ok(entries) = std::fs::read_dir(&dir) {
                 for entry in entries.flatten() {

@@ -214,14 +214,20 @@ fn activate_version(
     let main_binary = find_main_binary(&bin_dir, app).ok_or_else(|| {
         Error::Install(format!("no executable for {} found", app.name))
     })?;
-    let binary = bin_dir.join(&main_binary);
+
+    // Keep a stable path that survives upgrades so Windows file associations
+    // (and shortcuts) keep working across versions.
+    fs::create_dir_all(&paths.bin_dir)?;
+    let stable_dir = paths.bin_dir.join(app.id);
+    create_junction(&stable_dir, &bin_dir)?;
+    let binary = stable_dir.join(&main_binary);
 
     progress::message(progress, "Creating Start Menu shortcut …");
     let shortcut = paths.applications_dir.join(format!("{}.lnk", app.name));
     if let Some(parent) = shortcut.parent() {
         fs::create_dir_all(parent)?;
     }
-    create_shortcut(&shortcut, &binary, &bin_dir)?;
+    create_shortcut(&shortcut, &binary, &stable_dir)?;
 
     Ok(InstalledApp {
         version: version.to_string(),
@@ -249,6 +255,11 @@ fn create_shortcut(shortcut: &Path, target: &Path, working_dir: &Path) -> Result
 
 pub fn uninstall(app: &AppDef, paths: &Paths) -> Result<bool> {
     let mut removed = false;
+    let stable_dir = paths.bin_dir.join(app.id);
+    if stable_dir.exists() {
+        let _ = run_cmd(&["/C", "rmdir", &stable_dir.display().to_string()]);
+        removed = true;
+    }
     let app_dir = paths.app_dir(app.id);
     if app_dir.exists() {
         let _ = fs::remove_dir_all(&app_dir);
@@ -273,6 +284,46 @@ fn prune_old_versions(app: &AppDef, paths: &Paths, keep_dir: &Path) {
             let _ = fs::remove_dir_all(&path);
         }
     }
+}
+
+fn create_junction(link: &Path, target: &Path) -> Result<()> {
+    // Remove an existing junction/directory without touching its target.
+    if link.exists() {
+        let status = run_cmd(&["/C", "rmdir", &link.display().to_string()])?;
+        if !status.success() && link.exists() {
+            let _ = fs::remove_dir_all(link);
+        }
+    }
+    if let Some(parent) = link.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    let status = run_cmd(&[
+        "/C",
+        "mklink",
+        "/J",
+        &link.display().to_string(),
+        &target.display().to_string(),
+    ])?;
+    if !status.success() {
+        return Err(Error::Install(format!(
+            "Failed to create directory junction {} -> {}",
+            link.display(),
+            target.display()
+        )));
+    }
+    Ok(())
+}
+
+fn run_cmd(args: &[&str]) -> Result<std::process::ExitStatus> {
+    let mut cmd = Command::new("cmd");
+    cmd.args(args);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    Ok(cmd.status()?)
 }
 
 fn run_powershell(script: &str) -> Result<std::process::ExitStatus> {
